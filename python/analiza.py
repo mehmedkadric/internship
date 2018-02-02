@@ -49,3 +49,4 @@ for line in dataset["Survived"]:
 
 print("Broj putnika sa nepoznatim ishodom (prezivjeli ili ne): ", brojac)
 
+

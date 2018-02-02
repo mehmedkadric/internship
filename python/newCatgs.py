@@ -1,6 +1,8 @@
 from pandas import read_csv
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import linear_model
 from scipy import stats
 from sklearn import preprocessing
 from nameparser import HumanName
@@ -47,56 +49,123 @@ def ispisiStatsTitula(uniqueTitles, brojTitula):
 
 
 def unikatneGodine(dataset):
-    uniqueAges = np.unique(dataset["Age"])
-    brojGodina = []
-    for i, j in enumerate(dataset["Age"]):
-        if str(j) == "nan":
-            continue
-        else:
-            brojGodina.append(j)
+    return np.unique(dataset["Age"])
+
+
+def age(dataset):
+    noveGodine = []
+    prosjekGodina = np.mean(dataset["Age"])
     godine = dataset["Age"]
     maxGodine = max(godine)
-    brojac = [0, 0, 0, 0]
+    brojac = [0, 0, 0, 0, 0, 0]
     child = [0, 0]
     teen = [0, 0]
     adult = [0, 0]
+    mature = [0, 0]
     old = [0, 0]
     for i, j in enumerate(godine):
         if str(j) == "nan":
-            brojac[3] += 1
+            noveGodine.append(2)
             continue
-        if j < 13:
+        if j < 8:
+            noveGodine.append(0)
             if dataset["Survived"][i] == 1:
                 child[0] += 1
             else:
                 child[1] += 1
-            brojac[0] += 1
+            brojac[1] += 1
             continue
-        if j < 31:
+        if j < 20:
+            noveGodine.append(1)
+            if dataset["Survived"][i] == 1:
+                teen[0] += 1
+            else:
+                teen[1] += 1
+            brojac[2] += 1
+            continue
+        if j < 47:
+            noveGodine.append(2)
             if dataset["Survived"][i] == 1:
                 adult[0] += 1
             else:
                 adult[1] += 1
-            brojac[1] += 1
+            brojac[3] += 1
+            continue
+        if j < 60:
+            noveGodine.append(3)
+            if dataset["Survived"][i] == 1:
+                mature[0] += 1
+            else:
+                mature[1] += 1
+            brojac[4] += 1
             continue
         if j <= maxGodine:
+            noveGodine.append(4)
             if dataset["Survived"][i] == 1:
                 old[0] += 1
             else:
                 old[1] += 1
-            brojac[2] += 1
-    #srednjaVrijednost = np.mean(brojGodina)
+            brojac[5] += 1
+    """"
     print(child[0]/sum(child)*100)
-    print(adult[0]/sum(adult)*100)
-    print(old[0]/sum(old)*100)
-    print(brojac)
-    return uniqueAges
+    print(teen[0] / sum(teen) * 100)
+    print(adult[0] / sum(adult) * 100)
+    print(mature[0] / sum(mature) * 100)
+    print(old[0] / sum(old) * 100)
+    print(noveGodine)"""
+    return noveGodine
+
+
+def putnickaKlasa(dataset):
+    pclass = []
+    for i, j in enumerate(dataset["PClass"]):
+        if j != '1st' and j != '2nd' and j != '3rd':
+            pclass.append("2nd")
+        else:
+            pclass.append(dataset["PClass"][i])
+    return pclass
+
+
+def ishod(dataset):
+    prezivjeli = []
+    for i, j in enumerate(dataset["Survived"]):
+        prezivjeli.append(j)
+    return prezivjeli
+
+
+def uklopi(a, b, c, d):
+    new = []
+    for i, j in enumerate(a):
+        e = [a[i], b[i], c[i], d[i]]
+        new.append(e)
+    return new
+
+def uklopiX(a, b, c):
+    new = []
+    for i, j in enumerate(a):
+        e = [a[i], b[i], c[i]]
+        new.append(e)
+    return new
+
+
+def uklopiY(a):
+    new = []
+    for i, j in enumerate(a):
+        e = [a[i]]
+        new.append(e)
+    return new
+
 
 
 dataset = ucitajDS()
-titles = izdvojiTitule()
-uniqueTitles = np.unique(titles)
-brojTitula = prebrojSve(titles, uniqueTitles)
-#ispisiStatsTitula(uniqueTitles, brojTitula)
+titule = izdvojiTitule()
+print(titule[0:10])
+pclass = putnickaKlasa(dataset)
+print(pclass[0:10])
+noveGodine = age(dataset)
+print(noveGodine[0:10])
+prezivjeli = ishod(dataset)
+print(prezivjeli[0:10])
+newDataset = uklopi(titule, pclass, noveGodine, prezivjeli)
+print(newDataset[0:2])
 
-unikatneGodine(dataset)
