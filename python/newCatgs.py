@@ -6,7 +6,10 @@ from sklearn import linear_model
 from scipy import stats
 from sklearn import preprocessing
 from nameparser import HumanName
-
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+import matplotlib.pyplot as plt
+import matplotlib
 
 def ucitajDS():
     dataset = read_csv('Titanic_dataset.csv')
@@ -14,11 +17,14 @@ def ucitajDS():
     return dataset
 
 
-def izdvojiTitule():
+def izdvojiTitule(dataset):
     titles = []
     for row in dataset["Name"]:
         name = HumanName(row)
-        titles.append(name.title)
+        if name.title != '':
+            titles.append(name.title)
+        else:
+            titles.append('Miss')
     return titles
 
 
@@ -134,38 +140,46 @@ def ishod(dataset):
 
 
 def uklopi(a, b, c, d):
-    new = []
+    """new = []
     for i, j in enumerate(a):
         e = [a[i], b[i], c[i], d[i]]
-        new.append(e)
-    return new
+        new.append(e)"""
+    return list(zip(a, b, c, d))
 
 def uklopiX(a, b, c):
-    new = []
-    for i, j in enumerate(a):
-        e = [a[i], b[i], c[i]]
-        new.append(e)
-    return new
+    return list(zip(a, b, c))
 
 
 def uklopiY(a):
-    new = []
-    for i, j in enumerate(a):
-        e = [a[i]]
-        new.append(e)
-    return new
-
+    return list(zip(a))
 
 
 dataset = ucitajDS()
-titule = izdvojiTitule()
-print(titule[0:10])
-pclass = putnickaKlasa(dataset)
-print(pclass[0:10])
-noveGodine = age(dataset)
-print(noveGodine[0:10])
-prezivjeli = ishod(dataset)
-print(prezivjeli[0:10])
-newDataset = uklopi(titule, pclass, noveGodine, prezivjeli)
-print(newDataset[0:2])
 
+titule = izdvojiTitule(dataset)
+
+pclass = putnickaKlasa(dataset)
+
+noveGodine = age(dataset)
+
+prezivjeli = ishod(dataset)
+
+newDataset = uklopi(titule, pclass, noveGodine, prezivjeli)
+df = pd.DataFrame(data=newDataset, columns=['Title', 'PClass', 'LifeStage', 'Survived'])
+#print(df[0:5])
+df["Title"] = df["Title"].fillna(value=0)
+df.to_csv('noviDataset.csv', index=False, header=False)
+nds = pd.read_csv('noviDataset.csv', names=['Title', 'PClass', 'LifeStage', 'Survived'])
+train, test = train_test_split(df, test_size=0.2)
+X_train = zip(train["Title"],train["PClass"],train["LifeStage"])
+y_train = list(zip(train["Survived"]))
+
+logreg = LogisticRegression()
+#logreg.fit(X_train,y_train)
+"""
+y_pred = logreg.predict(X_test)
+from sklearn.metrics import confusion_matrix
+confusion_matrix = confusion_matrix(y_test, y_pred)
+print(confusion_matrix)
+print('Accuracy of logistic regression classifier on test set: {:.2f}'.format(logreg.score(X_test, y_test)))
+"""
