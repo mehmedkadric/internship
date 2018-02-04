@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 def ucitajDS():
-    dataset = read_csv('Titanic_dataset.csv')
+    dataset = read_csv('Titanic_dataset_for_testing.csv')
     dataset.columns = ['Name', 'PClass', 'Age', 'Sex', 'Survived']
     return dataset
 
@@ -44,7 +44,7 @@ def prebrojSve(titles, uniqueTitles):
     return brojTitula
 
 
-def ispisiStatsTitula(uniqueTitles, brojTitula):
+def ispisiStatsTitula(dataset, uniqueTitles, brojTitula):
     for i, j in enumerate(uniqueTitles):
         print("Titula '", uniqueTitles[i], "' se pojavljiva ", brojTitula[i], "puta")
 
@@ -62,7 +62,6 @@ def age(dataset):
     noveGodine = []
     prosjekGodina = np.mean(dataset["Age"])
     godine = dataset["Age"]
-    maxGodine = max(godine)
     brojac = [0, 0, 0, 0, 0, 0]
     child = [0, 0]
     teen = [0, 0]
@@ -70,6 +69,7 @@ def age(dataset):
     mature = [0, 0]
     old = [0, 0]
     for i, j in enumerate(godine):
+        print(j)
         if str(j) == "nan":
             noveGodine.append(2)
             continue
@@ -105,13 +105,14 @@ def age(dataset):
                 mature[1] += 1
             brojac[4] += 1
             continue
-        if j <= maxGodine:
+        else:
             noveGodine.append(4)
             if dataset["Survived"][i] == 1:
                 old[0] += 1
             else:
                 old[1] += 1
             brojac[5] += 1
+
     """"
     print(child[0]/sum(child)*100)
     print(teen[0] / sum(teen) * 100)
@@ -140,10 +141,6 @@ def ishod(dataset):
 
 
 def uklopi(a, b, c, d):
-    """new = []
-    for i, j in enumerate(a):
-        e = [a[i], b[i], c[i], d[i]]
-        new.append(e)"""
     return list(zip(a, b, c, d))
 
 def uklopiX(a, b, c):
@@ -154,32 +151,23 @@ def uklopiY(a):
     return list(zip(a))
 
 
-dataset = ucitajDS()
+def main():
+    dataset = ucitajDS()
 
-titule = izdvojiTitule(dataset)
+    titule = izdvojiTitule(dataset)
+    #print(np.size(titule[:]))
+    pclass = putnickaKlasa(dataset)
+    #print(np.size(pclass[:]))
+    noveGodine = age(dataset)
+    print(noveGodine[:])
+    prezivjeli = ishod(dataset)
+    #print(np.size(prezivjeli[:]))
+    newDataset = uklopi(titule, pclass, noveGodine, prezivjeli)
+    df = pd.DataFrame(data=newDataset, columns=['Title', 'PClass', 'LifeStage', 'Survived'])
+    df.to_csv('noviDatasetTest.csv', index=False, header=False)
+    #print(df["Survived"][:])
+    return
 
-pclass = putnickaKlasa(dataset)
 
-noveGodine = age(dataset)
 
-prezivjeli = ishod(dataset)
-
-newDataset = uklopi(titule, pclass, noveGodine, prezivjeli)
-df = pd.DataFrame(data=newDataset, columns=['Title', 'PClass', 'LifeStage', 'Survived'])
-#print(df[0:5])
-df["Title"] = df["Title"].fillna(value=0)
-df.to_csv('noviDataset.csv', index=False, header=False)
-nds = pd.read_csv('noviDataset.csv', names=['Title', 'PClass', 'LifeStage', 'Survived'])
-train, test = train_test_split(df, test_size=0.2)
-X_train = zip(train["Title"],train["PClass"],train["LifeStage"])
-y_train = list(zip(train["Survived"]))
-
-logreg = LogisticRegression()
-#logreg.fit(X_train,y_train)
-"""
-y_pred = logreg.predict(X_test)
-from sklearn.metrics import confusion_matrix
-confusion_matrix = confusion_matrix(y_test, y_pred)
-print(confusion_matrix)
-print('Accuracy of logistic regression classifier on test set: {:.2f}'.format(logreg.score(X_test, y_test)))
-"""
+main()
