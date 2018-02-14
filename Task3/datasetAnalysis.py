@@ -6,14 +6,13 @@ from sklearn import preprocessing
 
 
 def loadDataset():
-    dataset = read_csv('semicon.csv',header=None)
+    dataset = read_csv("secom.csv", header=None)
     return dataset
 
 
 def main():
     ds = loadDataset()
     print(ds.describe())
-    print(ds.info())
     return
 
 
