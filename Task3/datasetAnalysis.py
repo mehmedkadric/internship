@@ -14,11 +14,18 @@ def loadDataset():
     return dataset
 
 
+def preprocessing(ds):
+    for i in ds:
+        ds[i].fillna((ds[i].mean()), inplace=True)
+        if len(pd.unique(ds[i])) == 1:
+            del ds[i]
+    return ds
+
+
 def main():
     ds = loadDataset()
-    print(ds.describe())
-    print(ds.isnull().sum())
-    print(ds.size)
+    #print(ds.describe())
+    ds = preprocessing(ds)
 
     return
 
