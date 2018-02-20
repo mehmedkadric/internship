@@ -15,6 +15,7 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn.metrics import classification_report
 from sklearn.neighbors import NearestNeighbors
 import collections
+from sklearn.svm import OneClassSVM
 
 
 def loadDataset():
@@ -104,6 +105,13 @@ def locModel(ds, target):
     print((len(yModel)-err)/len(yModel))
 
 
+def SVManomaly(ds, target):
+    model = OneClassSVM(gamma=0.00052, nu=.95, kernel='rbf')
+    model.fit(ds.values)
+    print(classification_report(target, model.predict(ds.values)))
+    return model
+
+
 def score(model, target):
     yModel = np.array(model.labels_)
     yTarget = np.array(target)
@@ -127,6 +135,7 @@ def main():
             target[i] = -1
     #model = locModel(ds, target)
     model = DBscan(ds, target)
+    #model = SVManomaly(ds, target)
     #score(model, target)
     #print(np.array(target))
     #print(np.array(model.labels_))
