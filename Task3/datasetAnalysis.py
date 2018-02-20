@@ -16,6 +16,7 @@ from sklearn.metrics import classification_report
 from sklearn.neighbors import NearestNeighbors
 import collections
 from sklearn.svm import OneClassSVM
+from sklearn.mixture import GaussianMixture
 
 
 def loadDataset():
@@ -110,6 +111,12 @@ def SVManomaly(ds, target):
     model.fit(ds.values)
     print(classification_report(target, model.predict(ds.values)))
     return model
+
+
+def GaussianMix(ds, target):
+    gmm = GaussianMixture(n_components=3, n_init=4, random_state=42)
+    gmm.fit(ds.values)
+    #not finished
 
 
 def score(model, target):
