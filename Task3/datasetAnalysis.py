@@ -12,6 +12,9 @@ from scipy import stats
 from scipy import spatial
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.feature_selection import VarianceThreshold
+from sklearn.metrics import classification_report
+from sklearn.neighbors import NearestNeighbors
+import collections
 
 
 def loadDataset():
@@ -41,28 +44,51 @@ def preprocess(ds):
     x_scaled = scaler.fit_transform(x)
     ds = pd.DataFrame(x_scaled)
     return ds.loc[:, ds.var() > 0.03]
+    #return ds
+
+
+def distanceToTheNearestNeighbor(values):
+    nbrs = NearestNeighbors(n_neighbors=2).fit(values)
+    distances, indices = nbrs.kneighbors(values)
+    distances.sort
+    plt.hist(distances[:, 1], bins=100)
+    plt.title('Histogram - the nearest neighbor distances')
+    plt.show()
+    return
+
+
+def numberOfPointsWithinDistance(values, eps):
+    nbrs = NearestNeighbors(n_neighbors=500).fit(values)
+    distances, indices = nbrs.kneighbors(values)
+    distances.sort()
+    newArr = [0 for x in range(len(values))]
+    for i in range(0, len(values)):
+        for j in range(0, 200):
+            if distances[i][j] < eps:
+                newArr[i] += 1
+    plt.hist(newArr, bins=100)
+    plt.title('Histogram - minPts in Eps')
+    plt.show()
+    return
+
 
 
 def DBscan(ds, target):
-    mins = [4]
-    epses = [1.73]
+    mins = [6] #6
+    epses = [1.42] #1.42
     for i in mins:
         for j in epses:
             model = DBSCAN(eps=j, min_samples=i)
             model.fit_predict(ds.values)
             print("trying...")
-            print(score(model, target)*100, pd.unique(model.labels_))
-            print(model.labels_[180:210])
-            print(target[180:210])
+            print(classification_report(target, model.labels_))
+            print(collections.Counter(model.labels_))
+            #distanceToTheNearestNeighbor(ds.values)
+            #numberOfPointsWithinDistance(ds.values, epses[0])
+            """print(model.labels_[180:210])
+            print(target[180:210])"""
             if score(model, target) >= 0.9337:
                 print(i, j)
-    ctr = [0, 0]
-    for i in model.labels_:
-        if i == -1:
-            ctr[0] += 1
-        else:
-            ctr[1] += 1
-    print(ctr, pd.unique(model.labels_))
     return model
 
 
