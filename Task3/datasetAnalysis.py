@@ -53,7 +53,7 @@ def distanceToTheNearestNeighbor(values):
     nbrs = NearestNeighbors(n_neighbors=2).fit(values)
     distances, indices = nbrs.kneighbors(values)
     distances.sort
-    plt.hist(distances[:, 1], bins=100)
+    plt.hist(distances[:, 1], bins=30)
     plt.title('Histogram - the nearest neighbor distances')
     plt.show()
     return
@@ -68,7 +68,7 @@ def numberOfPointsWithinDistance(values, eps):
         for j in range(0, 200):
             if distances[i][j] < eps:
                 newArr[i] += 1
-    plt.hist(newArr, bins=100)
+    plt.hist(newArr, bins=30)
     plt.title('Histogram - minPts in Eps')
     plt.show()
     return
@@ -85,8 +85,8 @@ def DBscan(ds, target):
             print("trying...")
             print(classification_report(target, model.labels_))
             print(collections.Counter(model.labels_))
-            #distanceToTheNearestNeighbor(ds.values)
-            #numberOfPointsWithinDistance(ds.values, epses[0])
+            distanceToTheNearestNeighbor(ds.values)
+            numberOfPointsWithinDistance(ds.values, epses[0])
             """print(model.labels_[180:210])
             print(target[180:210])"""
             if score(model, target) >= 0.9337:
