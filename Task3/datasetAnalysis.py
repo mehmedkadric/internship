@@ -50,13 +50,13 @@ def preprocess(ds):
 
 
 def distanceToTheNearestNeighbor(values):
-    nbrs = NearestNeighbors(n_neighbors=2).fit(values)
+    nbrs = NearestNeighbors(n_neighbors=5).fit(values)
     distances, indices = nbrs.kneighbors(values)
     distances.sort
-    plt.hist(distances[:, 1], bins=30)
+    """plt.hist(distances[:, 1], bins=30)
     plt.title('Histogram - the nearest neighbor distances')
-    plt.show()
-    return
+    plt.show()"""
+    return distances, indices
 
 
 def numberOfPointsWithinDistance(values, eps):
@@ -129,6 +129,31 @@ def score(model, target):
     return (len(yModel)-err)/len(yModel)
 
 
+def calcDist(ds, target):
+    dsOld = ds
+    anomalies = []
+    for i in range(0, len(ds)):
+        if target[i] == -1:
+            anomalies.append(i)
+            ds.drop(ds.index[i])
+
+    dst, ind = distanceToTheNearestNeighbor(ds.values)
+    newDst = []
+    for i in range(0, len(anomalies)):
+        for j in range(0, len(ds)):
+            if(anomalies[i] == j):
+                print(dsOld.shape)
+                print(ds.shape)
+                """newDst = ds.values
+                print(newDst)
+                print(dsOld[i].values)
+                print(newDst)"""
+
+    #plt.hist(newDst)
+    #plt.show()
+
+
+
 def main():
     ds = loadDataset()
     ds = preprocess(ds)
@@ -140,8 +165,10 @@ def main():
             target[i] = 0
         else:
             target[i] = -1
+
+    calcDist(ds, target)
     #model = locModel(ds, target)
-    model = DBscan(ds, target)
+    #model = DBscan(ds, target)
     #model = SVManomaly(ds, target)
     #score(model, target)
     #print(np.array(target))
