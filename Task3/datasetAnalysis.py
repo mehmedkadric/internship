@@ -17,6 +17,13 @@ from sklearn.neighbors import NearestNeighbors
 import collections
 from sklearn.svm import OneClassSVM
 from sklearn.mixture import GaussianMixture
+from sklearn.metrics.pairwise import pairwise_distances
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
+from sklearn import metrics
+from sklearn.model_selection import ParameterGrid
+from sklearn.model_selection import RandomizedSearchCV
+from time import time
 
 
 def loadDataset():
@@ -53,9 +60,9 @@ def distanceToTheNearestNeighbor(values):
     nbrs = NearestNeighbors(n_neighbors=5).fit(values)
     distances, indices = nbrs.kneighbors(values)
     distances.sort
-    """plt.hist(distances[:, 1], bins=30)
+    plt.hist(distances[:, 1], bins=30)
     plt.title('Histogram - the nearest neighbor distances')
-    plt.show()"""
+    plt.show()
     return distances, indices
 
 
@@ -76,78 +83,84 @@ def numberOfPointsWithinDistance(values, eps):
 
 
 def DBscan(ds, target):
-    mins = [6] #6
-    epses = [1.42] #1.42
-    for i in mins:
-        for j in epses:
-            model = DBSCAN(eps=j, min_samples=i)
-            model.fit_predict(ds.values)
-            print("trying...")
-            print(classification_report(target, model.labels_))
-            print(collections.Counter(model.labels_))
-            distanceToTheNearestNeighbor(ds.values)
-            numberOfPointsWithinDistance(ds.values, epses[0])
-            """print(model.labels_[180:210])
-            print(target[180:210])"""
-            if score(model, target) >= 0.9337:
-                print(i, j)
+    model = DBSCAN(eps=1.22, min_samples=5)
+    model.fit_predict(ds.values)
+    print(model.labels_)
+    print(classification_report(target, model.labels_))
+    print(collections.Counter(model.labels_))
+    #numberOfPointsWithinDistance(ds.values, 1.2)
+    print(model.labels_[0:20])
+    print(target[0:20])
     return model
 
 
 def locModel(ds, target):
-    model = LocalOutlierFactor(n_neighbors=5)
+    model = LocalOutlierFactor(n_neighbors=20)
     y_pred = model.fit_predict(ds.values)
-    yModel = np.array(y_pred)
-    yTarget = np.array(target)
-    err = 0
-    for i, j in enumerate(yModel):
-        if j != yTarget[i]:
-            err += 1
-    print((len(yModel)-err)/len(yModel))
-
-
-def SVManomaly(ds, target):
-    model = OneClassSVM(gamma=0.00052, nu=.95, kernel='rbf')
-    model.fit(ds.values)
-    print(classification_report(target, model.predict(ds.values)))
+    print(y_pred[0:20])
+    print(target[0:20])
+    print(classification_report(target, y_pred))
     return model
 
 
-def GaussianMix(ds, target):
-    gmm = GaussianMixture(n_components=3, n_init=4, random_state=42)
-    gmm.fit(ds.values)
-    #not finished
+def SVManomaly(ds, target, g=0.0022, n=0.0045):
+    dsOld = ds
+    targetOld = target
+    df1 = pd.DataFrame(target)
+    df1.columns = ['labels']
+    ds = pd.concat([ds, df1], axis=1)
+    ds = ds.sort_values(by=['labels'])
+    ds = ds.drop('labels', 1)
+    ds = ds[0:1463]
+    target = sorted(target)
+    target = target[0:1463]
+    X_train, X_test, y_train, y_test = train_test_split(ds, target, train_size=0.8)
 
-
-def score(model, target):
-    yModel = np.array(model.labels_)
-    yTarget = np.array(target)
-    err = 0
-    for i, j in enumerate(yModel):
-        if j != yTarget[i]:
-            err += 1
-    return (len(yModel)-err)/len(yModel)
+    #g=110, nu=0.0015
+    gs = [120]
+    nus = [0.0019]
+    model = OneClassSVM(gamma=120, nu=0.0019, kernel='rbf')
+    model.fit(ds.values)
+    preds = model.predict(dsOld.values)
+    targs = targetOld
+    """print(preds[2:22])
+    print(targs[2:22])
+    print("accuracy: ", metrics.accuracy_score(targs, preds))
+    print("precision: ", metrics.precision_score(targs, preds))
+    print("recall: ", metrics.recall_score(targs, preds))
+    print("f1: ", metrics.f1_score(targs, preds))
+    print("area under curve (auc): ", metrics.roc_auc_score(targs, preds))"""
+    print(confusion_matrix(preds, targs))
+    print(targs[0:20])
+    print(preds[0:20])
+    print(classification_report(targs, preds))
+    return model
 
 
 def calcDist(ds, target):
-    dsOld = ds
-    anomalies = []
-    for i in range(0, len(ds)):
-        if target[i] == -1:
-            anomalies.append(i)
-            ds.drop(ds.index[i])
-
-    dst, ind = distanceToTheNearestNeighbor(ds.values)
-    newDst = []
-    for i in range(0, len(anomalies)):
-        for j in range(0, len(ds)):
-            if(anomalies[i] == j):
-                print(dsOld.shape)
-                print(ds.shape)
-                """newDst = ds.values
-                print(newDst)
-                print(dsOld[i].values)
-                print(newDst)"""
+    df1 = pd.DataFrame(target)
+    df1.columns = ['labels']
+    ds = pd.concat([ds, df1], axis=1)
+    ds = ds.sort_values(by=['labels'])
+    ds = ds.drop('labels', 1)
+    a = pairwise_distances(ds.values, metric='euclidean')
+    np.fill_diagonal(a, 5)
+    outliers = a.min(axis=1)
+    np.fill_diagonal(a, 0)
+    print(np.shape(ds.values))
+    #print(a[:1463][:1463].mean(axis=1))
+    plt.hist(a[:1463][0], bins=50)
+    plt.title("Minimal distances between normal examples")
+    plt.show()
+    """plt.hist(outliers[0:1463], bins=70)
+    plt.show()
+    plt.hist(outliers[-104:], bins=70)
+    plt.show()
+    #print(pwMatrix.min(axis=1))
+    newDst = ds.values
+    print(newDst)
+    print(dsOld[i].values)
+    print(newDst)"""
 
     #plt.hist(newDst)
     #plt.show()
@@ -157,19 +170,33 @@ def calcDist(ds, target):
 def main():
     ds = loadDataset()
     ds = preprocess(ds)
-    print(ds.shape)
+    #print(ds.shape)
     labels = loadLabels()
     target = labels[:][1].values
     for i, j in enumerate(target):
         if j == -1:
-            target[i] = 0
+            target[i] = 1
+            continue
         else:
             target[i] = -1
-
-    calcDist(ds, target)
     #model = locModel(ds, target)
+    model = SVManomaly(ds, target)
+
+    for i, j in enumerate(target):
+        if j == -1:
+            target[i] = 0
+        else:
+            target[i] = 1
+
+    #calcDist(ds, target)
+
+    for i, j in enumerate(target):
+        if j == 0:
+            target[i] = -1
+        else:
+            target[i] = 1
+
     #model = DBscan(ds, target)
-    #model = SVManomaly(ds, target)
     #score(model, target)
     #print(np.array(target))
     #print(np.array(model.labels_))
