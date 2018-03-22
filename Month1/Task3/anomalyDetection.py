@@ -23,6 +23,8 @@ from sklearn.model_selection import train_test_split
 from sklearn import metrics
 from sklearn.model_selection import ParameterGrid
 from sklearn.model_selection import RandomizedSearchCV
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
 
 
 def loadDataset():
@@ -48,7 +50,7 @@ def preprocess(ds):
             del ds[i]
     del ds[0]
     x = ds.values
-    scaler = MinMaxScaler()
+    scaler = StandardScaler()
     x_scaled = scaler.fit_transform(x)
     ds = pd.DataFrame(x_scaled)
     return ds.loc[:, ds.var() > 0.03]
@@ -92,6 +94,52 @@ def DBscan(ds, target):
     return model
 
 
+def extractNormalExamples(X_train, y_train):
+    X_train_new = []
+    for counter, element in enumerate(y_train):
+        if element == 1:
+            X_train_new.append(X_train.iloc[counter])
+    X_train_new = pd.DataFrame(X_train_new)
+    return X_train_new
+
+"""
+def SVManomaly(ds, target, g=0.0022, n=0.0045):
+    X_train, X_test, y_train, y_test = train_test_split(ds, target, test_size=0.3, random_state=42)
+    X_train_new= extractNormalExamples(X_train, y_train)
+    #BREAK
+    model = OneClassSVM()
+    accMax = 0
+    bestParam = []
+    counter = 99
+    grid = {'nu': np.linspace(0.0005, 0.5, 50)}
+    for z in ParameterGrid(grid):
+        model.set_params(**z)
+        model.fit(X_train_new)
+        y_pred = model.predict(X_test)
+        acc = metrics.accuracy_score(y_test, y_pred)
+        if acc > accMax:
+            accMax = acc
+            bestParam = z
+        counter += 1
+        if counter == 100:
+            print("Highest accuracy:", accMax, "for following parameters:", bestParam)
+            counter = 0
+    print("Accuracy:", accMax, ", parameters:", bestParam)
+    #BREAK
+    model = OneClassSVM(nu=0.08, kernel='rbf')
+    model.fit(X_train_new)
+    predictions = model.predict(X_test)
+    print(np.unique(predictions))
+    print(predictions[2:22])
+    print(y_test[2:22])
+    print("accuracy: ", metrics.accuracy_score(y_test, predictions))
+    print(confusion_matrix(predictions, y_test))
+    print(classification_report(y_test, predictions))
+    #
+    return model
+"""
+
+
 def SVManomaly(ds, target, g=0.0022, n=0.0045):
     dsOld = ds
     print(ds.shape)
@@ -102,7 +150,7 @@ def SVManomaly(ds, target, g=0.0022, n=0.0045):
     ds = ds.sort_values(by=['labels'])
     ds = ds.drop('labels', 1)
     ds = ds[104:]
-    model = OneClassSVM(gamma=110, nu=0.0039, kernel='rbf')
+    model = OneClassSVM(gamma=10, nu=0.0039, kernel='rbf')
     model.fit(ds.values)
     preds = model.predict(dsOld.values)
     targs = targetOld
@@ -155,7 +203,7 @@ def main():
             continue
         else:
             target[i] = -1
-    #model = locModel(ds, target)
+
     model = SVManomaly(ds, target)
 
     for i, j in enumerate(target):
@@ -172,10 +220,16 @@ def main():
         else:
             target[i] = 1
 
-    #model = DBscan(ds, target)
-    #score(model, target)
-    #print(np.array(target))
-    #print(np.array(model.labels_))
+    X_norm = StandardScaler().fit_transform(ds.values)
+    pca = PCA(n_components=2)
+    transformed = pd.DataFrame(pca.fit_transform(X_norm))
+    y = target
+    plt.scatter(transformed[y == -1][0], transformed[y == -1][1], label='Class 1', c='red')
+    plt.scatter(transformed[y == 1][0], transformed[y == 1][1], label='Class 2', c='blue')
+
+    plt.legend()
+    plt.show()
+
     return
 
 

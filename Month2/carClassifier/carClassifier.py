@@ -5,6 +5,8 @@ from sklearn.metrics import accuracy_score
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Convolution2D
 from keras.layers import MaxPooling2D, Flatten
+from keras.models import load_model
+
 
 NB_EPOCH = 10
 IMAGE_SIZE = 50
@@ -63,11 +65,4 @@ print("Test data size: ", len(test_data))
 idx = np.random.permutation(train_data.shape[0])
 model = CNN()
 model.fit(train_data[idx], train_labels[idx], nb_epoch=NB_EPOCH)
-preds = np.argmax(model.predict(test_data), axis=1)
-test_labels = np.argmax(test_labels, axis=1)
-print(accuracy_score(test_labels, preds))
-
-testImg = transform_img(io.imread('testSnow.jpeg'))
-prediction = model.predict(testImg.reshape((1,50,50,3)))
-print("Probability of car presence in input picture: [Not car, Car]", prediction)
-
+model.save('model.h5')
